@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VideoCourts™ — Enterprise Justice Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#0b1120;color:#e2e8f0;min-height:100vh}
+.grad-text{background:linear-gradient(135deg,#3b82f6,#06b6d4);-webkit-background-clip:text;color:transparent}
+.grad-bg{background:linear-gradient(135deg,#3b82f6,#06b6d4)}
+.btn{padding:10px 20px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#3b82f6,#06b6d4);color:white}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(59,130,246,.35)}
+.btn-secondary{background:#1e293b;color:#e2e8f0;border:1px solid #334155}
+.btn-secondary:hover{background:#334155}
+.btn-success{background:#10b981;color:white}
+.btn-danger{background:#ef4444;color:white}
+.btn-alfai{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:white}
+.btn-alfai:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(139,92,246,.4)}
+.btn-legalshield{background:linear-gradient(135deg,#0056b3,#00a8e8);color:white}
+.input{width:100%;background:#0f172a;border:1px solid #1e293b;color:#e2e8f0;padding:10px 14px;border-radius:10px;font-size:14px}
+.input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.view{display:none}.view.active{display:block}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:2000}
+.modal.show{display:flex}
+.modal-content{background:#111827;border:1px solid #3b82f6;border-radius:20px;max-width:620px;width:90%;max-height:90vh;overflow-y:auto}
+.chat-bubble{margin-bottom:12px;padding:12px 16px;border-radius:12px;max-width:85%;word-wrap:break-word}
+.chat-bubble.user{background:linear-gradient(135deg,#3b82f6,#06b6d4);color:white;margin-left:auto}
+.chat-bubble.bot{background:#1e293b}
+.video-tile{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:12px}
+#chat-panel{display:none}
+#chat-panel.open{display:flex}
+.feature-card{background:#111827;border:1px solid #1e293b;border-radius:20px;padding:28px;transition:all .3s;cursor:pointer}
+.feature-card:hover{border-color:#3b82f6;transform:translateY(-4px);box-shadow:0 20px 40px rgba(59,130,246,.15)}
+.stat-card{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid #334155;border-radius:16px;padding:24px;text-align:center}
+.lawyer-card{background:#111827;border:1px solid #1e293b;border-radius:16px;padding:20px;transition:all .2s}
+.lawyer-card:hover{border-color:#3b82f6;transform:translateY(-2px)}
+.mock-scenario{background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(236,72,153,.1));border:1px solid rgba(139,92,246,.3);border-radius:16px;padding:20px;transition:all .2s;cursor:pointer}
+.mock-scenario:hover{border-color:#ec4899;transform:translateY(-2px)}
+.alfai-tool{background:#111827;border:1px solid #1e293b;border-radius:16px;padding:20px;transition:all .2s;cursor:pointer}
+.alfai-tool:hover{border-color:#8b5cf6;transform:translateY(-2px)}
+.rating-star{color:#fbbf24}
+.rating-star-empty{color:#475569}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="sticky top-0 z-50 bg-slate-950/95 backdrop-blur border-b border-slate-800">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div onclick="showView('home')" class="flex items-center gap-3 cursor-pointer">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white text-2xl grad-bg"><i class="fas fa-gavel"></i></div>
+      <div><h1 class="text-2xl font-bold">VideoCourts<span class="text-xs text-slate-400">™</span></h1></div>
+    </div>
+    <div class="flex items-center gap-4 text-sm">
+      <a onclick="showView('home')" class="cursor-pointer hover:text-white">Home</a>
+      <a onclick="showView('casecheck')" class="cursor-pointer hover:text-white">Case Lookup</a>
+      <a onclick="showView('hearing')" class="cursor-pointer hover:text-white">Hearings</a>
+      <a onclick="showView('bail')" class="cursor-pointer hover:text-white">Bail</a>
+      <a onclick="showView('courtroom')" class="cursor-pointer hover:text-white">Courtroom</a>
+      <a onclick="showView('alfai')" class="cursor-pointer hover:text-white text-purple-400"><i class="fas fa-wand-magic-sparkles"></i> Alfai</a>
+      <a onclick="showView('mocktrial')" class="cursor-pointer hover:text-white text-pink-400"><i class="fas fa-scale-balanced"></i> Mock Trial</a>
+      <a onclick="showView('directory')" class="cursor-pointer hover:text-white text-cyan-400"><i class="fas fa-users"></i> Lawyers</a>
+      <button onclick="openLegalShield()" class="btn btn-legalshield text-sm px-5 py-2"><i class="fas fa-shield-halved"></i> LegalShield</button>
+      <button onclick="openChat()" class="btn btn-primary text-sm px-5 py-2"><i class="fas fa-robot"></i> Grok AI</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HOME VIEW -->
+<div id="view-home" class="view active">
+  <div class="relative max-w-7xl mx-auto px-6 py-12">
+    <div class="text-center mb-12">
+      <h1 class="text-6xl font-bold mb-6 grad-text">The Future of Justice is Here</h1>
+      <p class="text-xl text-slate-400 max-w-2xl mx-auto mb-8">Secure virtual courtrooms, AI legal assistant, bail bonding, mock trials, and lawyer directory — all in one platform.</p>
+      <div class="flex gap-4 justify-center flex-wrap">
+        <button onclick="showView('casecheck')" class="btn btn-primary text-lg px-8 py-4"><i class="fas fa-search"></i> Lookup a Case</button>
+        <button onclick="showView('courtroom')" class="btn btn-secondary text-lg px-8 py-4"><i class="fas fa-video"></i> Enter Courtroom</button>
+        <button onclick="showView('alfai')" class="btn btn-alfai text-lg px-8 py-4"><i class="fas fa-wand-magic-sparkles"></i> Try Alfai</button>
+      </div>
+    </div>
+
+    <!-- Hero Image -->
+    <div class="mb-16 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl">
+      <img src="https://image.qwenlm.ai/public_source/596baf5e-565b-4942-b65f-bd224fbf6eb9/18a561901-70a1-429f-9b34-9f43ac7b91bd.png" alt="Virtual Courtroom" style="width:100%;height:400px;object-fit:cover">
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-4 gap-6 mb-16">
+      <div class="stat-card">
+        <div class="text-4xl font-bold grad-text mb-2">12,450+</div>
+        <div class="text-slate-400">Cases Processed</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-4xl font-bold grad-text mb-2">98.7%</div>
+        <div class="text-slate-400">Uptime</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-4xl font-bold grad-text mb-2">2,300+</div>
+        <div class="text-slate-400">Attorneys</div>
+      </div>
+      <div class="stat-card">
+        <div class="text-4xl font-bold grad-text mb-2">24/7</div>
+        <div class="text-slate-400">AI Support</div>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <h2 class="text-3xl font-bold text-center mb-8">Platform Features</h2>
+    <div class="grid grid-cols-3 gap-6 mb-16">
+      <div class="feature-card" onclick="showView('courtroom')">
+        <div class="text-4xl text-blue-400 mb-4"><i class="fas fa-video"></i></div>
+        <h3 class="text-xl font-bold mb-2">Virtual Courtrooms</h3>
+        <p class="text-slate-400">HD video hearings with encrypted connections and court-grade security.</p>
+      </div>
+      <div class="feature-card" onclick="openChat()">
+        <div class="text-4xl text-cyan-400 mb-4"><i class="fas fa-robot"></i></div>
+        <h3 class="text-xl font-bold mb-2">Grok AI Assistant</h3>
+        <p class="text-slate-400">24/7 AI-powered legal research and case preparation support.</p>
+      </div>
+      <div class="feature-card" onclick="showView('bail')">
+        <div class="text-4xl text-emerald-400 mb-4"><i class="fas fa-hand-holding-dollar"></i></div>
+        <h3 class="text-xl font-bold mb-2">Bail Bonding</h3>
+        <p class="text-slate-400">Instant bail processing with licensed bonding partners.</p>
+      </div>
+      <div class="feature-card" onclick="showView('alfai')">
+        <div class="text-4xl text-purple-400 mb-4"><i class="fas fa-wand-magic-sparkles"></i></div>
+        <h3 class="text-xl font-bold mb-2">Alfai AI Suite</h3>
+        <p class="text-slate-400">Advanced AI legal drafting, contract review, and case analysis.</p>
+      </div>
+      <div class="feature-card" onclick="showView('mocktrial')">
+        <div class="text-4xl text-pink-400 mb-4"><i class="fas fa-scale-balanced"></i></div>
+        <h3 class="text-xl font-bold mb-2">Mock Trial</h3>
+        <p class="text-slate-400">Practice courtroom arguments with AI judge feedback.</p>
+      </div>
+      <div class="feature-card" onclick="showView('directory')">
+        <div class="text-4xl text-amber-400 mb-4"><i class="fas fa-users"></i></div>
+        <h3 class="text-xl font-bold mb-2">Lawyers Directory</h3>
+        <p class="text-slate-400">Connect with verified attorneys across all practice areas.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CASE CHECK VIEW -->
+<div id="view-casecheck" class="view p-8 max-w-4xl mx-auto">
+  <h2 class="text-3xl font-bold mb-6">Case Lookup</h2>
+  <input id="case-input" type="text" placeholder="Enter Case Number (e.g. CR-2025-00421)" class="input text-lg py-6 mb-6 w-full">
+  <button onclick="searchCase()" class="btn btn-primary w-full py-6 text-lg">Search Case</button>
+  <div id="case-result" class="mt-8"></div>
+
+  <div class="mt-12">
+    <h3 class="text-xl font-bold mb-4">Recent Cases</h3>
+    <div class="space-y-3">
+      <div onclick="document.getElementById('case-input').value='CR-2025-00421';searchCase()" class="video-tile cursor-pointer flex justify-between items-center">
+        <div>
+          <div class="font-semibold">CR-2025-00421</div>
+          <div class="text-sm text-slate-400">State v. Johnson • Criminal</div>
+        </div>
+        <span class="text-emerald-400 text-sm">Pending</span>
+      </div>
+      <div onclick="document.getElementById('case-input').value='CV-2025-00892';searchCase()" class="video-tile cursor-pointer flex justify-between items-center">
+        <div>
+          <div class="font-semibold">CV-2025-00892</div>
+          <div class="text-sm text-slate-400">Smith v. Acme Corp • Civil</div>
+        </div>
+        <span class="text-blue-400 text-sm">Scheduled</span>
+      </div>
+      <div onclick="document.getElementById('case-input').value='FM-2025-00156';searchCase()" class="video-tile cursor-pointer flex justify-between items-center">
+        <div>
+          <div class="font-semibold">FM-2025-00156</div>
+          <div class="text-sm text-slate-400">Doe v. Doe • Family</div>
+        </div>
+        <span class="text-amber-400 text-sm">In Review</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HEARING VIEW -->
+<div id="view-hearing" class="view p-8 max-w-5xl mx-auto">
+  <h2 class="text-3xl font-bold mb-6">Upcoming Hearings</h2>
+  <div class="grid grid-cols-2 gap-6">
+    <div class="video-tile">
+      <div class="text-sm text-cyan-400 font-semibold mb-2">CR-2025-00421</div>
+      <h3 class="font-bold text-lg mb-2">State v. Johnson</h3>
+      <p class="text-slate-400 text-sm mb-3">Arraignment Hearing</p>
+      <div class="flex items-center gap-2 text-sm text-slate-400 mb-4"><i class="far fa-calendar"></i> July 25, 2025 • 10:00 AM</div>
+      <button onclick="showView('courtroom')" class="btn btn-primary w-full">Join Hearing</button>
+    </div>
+    <div class="video-tile">
+      <div class="text-sm text-cyan-400 font-semibold mb-2">CV-2025-00892</div>
+      <h3 class="font-bold text-lg mb-2">Smith v. Acme Corp</h3>
+      <p class="text-slate-400 text-sm mb-3">Pre-Trial Conference</p>
+      <div class="flex items-center gap-2 text-sm text-slate-400 mb-4"><i class="far fa-calendar"></i> July 28, 2025 • 2:00 PM</div>
+      <button onclick="showView('courtroom')" class="btn btn-primary w-full">Join Hearing</button>
+    </div>
+    <div class="video-tile">
+      <div class="text-sm text-cyan-400 font-semibold mb-2">FM-2025-00156</div>
+      <h3 class="font-bold text-lg mb-2">Doe v. Doe</h3>
+      <p class="text-slate-400 text-sm mb-3">Custody Mediation</p>
+      <div class="flex items-center gap-2 text-sm text-slate-400 mb-4"><i class="far fa-calendar"></i> August 1, 2025 • 9:00 AM</div>
+      <button onclick="showView('courtroom')" class="btn btn-primary w-full">Join Hearing</button>
+    </div>
+    <div class="video-tile">
+      <div class="text-sm text-cyan-400 font-semibold mb-2">TR-2025-01204</div>
+      <h3 class="font-bold text-lg mb-2">People v. Garcia</h3>
+      <p class="text-slate-400 text-sm mb-3">Traffic Violation</p>
+      <div class="flex items-center gap-2 text-sm text-slate-400 mb-4"><i class="far fa-calendar"></i> August 5, 2025 • 11:30 AM</div>
+      <button onclick="showView('courtroom')" class="btn btn-primary w-full">Join Hearing</button>
+    </div>
+  </div>
+</div>
+
+<!-- BAIL VIEW -->
+<div id="view-bail" class="view p-8 max-w-5xl mx-auto">
+  <h2 class="text-3xl font-bold mb-6">Bail Bonding Services</h2>
+  <div class="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-3xl p-8 mb-8">
+    <h3 class="text-2xl font-bold mb-4">Post Bail Instantly</h3>
+    <p class="text-slate-300 mb-6">Secure release through our licensed bonding partners. 10% fee, 24/7 processing.</p>
+    <div class="grid grid-cols-3 gap-4">
+      <div class="bg-slate-900/50 rounded-xl p-4"><div class="text-3xl font-bold grad-text">$5,000</div><div class="text-sm text-slate-400">Average Bail</div></div>
+      <div class="bg-slate-900/50 rounded-xl p-4"><div class="text-3xl font-bold grad-text">15 min</div><div class="text-sm text-slate-400">Avg Processing</div></div>
+      <div class="bg-slate-900/50 rounded-xl p-4"><div class="text-3xl font-bold grad-text">100%</div><div class="text-sm text-slate-400">Secure</div></div>
+    </div>
+  </div>
+
+  <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6">
+    <h3 class="text-xl font-bold mb-4">Start Bail Process</h3>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div><label class="text-sm text-slate-400 mb-2 block">Defendant Name</label><input type="text" placeholder="Full legal name" class="input"></div>
+      <div><label class="text-sm text-slate-400 mb-2 block">Case Number</label><input type="text" placeholder="CR-2025-XXXXX" class="input"></div>
+      <div><label class="text-sm text-slate-400 mb-2 block">Bail Amount</label><input type="text" placeholder="$0.00" class="input"></div>
+      <div><label class="text-sm text-slate-400 mb-2 block">Court Location</label><input type="text" placeholder="County / State" class="input"></div>
+    </div>
+    <button onclick="alert('Bail request submitted! A bonding agent will contact you within 15 minutes.')" class="btn btn-success w-full py-4 text-lg"><i class="fas fa-hand-holding-dollar"></i> Request Bail Bond</button>
+  </div>
+</div>
+
+<!-- COURTROOM VIEW -->
+<div id="view-courtroom" class="view p-8 max-w-6xl mx-auto">
+  <h2 class="text-3xl font-bold mb-6">Live Courtroom</h2>
+  <div class="aspect-video bg-black rounded-3xl overflow-hidden mb-6">
+    <video id="courtroom-player" class="video-js w-full h-full" controls preload="auto">
+      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="grid grid-cols-4 gap-4">
+    <div class="video-tile">
+      <div class="aspect-video bg-slate-800 rounded-lg mb-2 flex items-center justify-center"><i class="fas fa-user-tie text-4xl text-slate-600"></i></div>
+      <div class="text-sm font-semibold">Judge Martinez</div>
+      <div class="text-xs text-slate-400">Presiding</div>
+    </div>
+    <div class="video-tile">
+      <div class="aspect-video bg-slate-800 rounded-lg mb-2 flex items-center justify-center"><i class="fas fa-user text-4xl text-slate-600"></i></div>
+      <div class="text-sm font-semibold">Defendant</div>
+      <div class="text-xs text-emerald-400">Connected</div>
+    </div>
+    <div class="video-tile">
+      <div class="aspect-video bg-slate-800 rounded-lg mb-2 flex items-center justify-center"><i class="fas fa-user-tie text-4xl text-slate-600"></i></div>
+      <div class="text-sm font-semibold">Defense Counsel</div>
+      <div class="text-xs text-emerald-400">Connected</div>
+    </div>
+    <div class="video-tile">
+      <div class="aspect-video bg-slate-800 rounded-lg mb-2 flex items-center justify-center"><i class="fas fa-user-tie text-4xl text-slate-600"></i></div>
+      <div class="text-sm font-semibold">Prosecutor</div>
+      <div class="text-xs text-emerald-400">Connected</div>
+    </div>
+  </div>
+  <div class="mt-6 flex gap-4">
+    <button onclick="this.innerHTML=this.innerHTML.includes('Mute')?'<i class=\'fas fa-microphone\'></i> Unmute':'<i class=\'fas fa-microphone-slash\'></i> Mute'" class="btn btn-primary flex-1"><i class="fas fa-microphone"></i> Mute</button>
+    <button onclick="this.innerHTML=this.innerHTML.includes('Camera')?'<i class=\'fas fa-video-slash\'></i> Stop Camera':'<i class=\'fas fa-video\'></i> Camera'" class="btn btn-secondary flex-1"><i class="fas fa-video"></i> Camera</button>
+    <button onclick="if(confirm('Leave hearing?'))showView('home')" class="btn btn-danger flex-1"><i class="fas fa-phone-slash"></i> Leave</button>
+  </div>
+</div>
+
+<!-- ALFAI VIEW -->
+<div id="view-alfai" class="view p-8 max-w-6xl mx-auto">
+  <div class="text-center mb-10">
+    <div class="inline-block px-4 py-1 rounded-full bg-purple-500/20 text-purple-400 text-sm font-semibold mb-4">
+      <i class="fas fa-wand-magic-sparkles"></i> AI Legal Intelligence Suite
+    </div>
+    <h1 class="text-5xl font-bold mb-4" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);-webkit-background-clip:text;color:transparent">Alfai — Legal AI Powerhouse</h1>
+    <p class="text-xl text-slate-400 max-w-2xl mx-auto">Advanced AI tools for legal professionals. Draft, analyze, review, and strategize with enterprise-grade AI.</p>
+  </div>
+
+  <!-- Alfai Tools Grid -->
+  <div class="grid grid-cols-3 gap-6 mb-10">
+    <div class="alfai-tool" onclick="openAlfaiTool('draft')">
+      <div class="text-4xl text-purple-400 mb-4"><i class="fas fa-file-pen"></i></div>
+      <h3 class="text-xl font-bold mb-2">Legal Drafting</h3>
+      <p class="text-slate-400 text-sm">Generate motions, briefs, contracts, and pleadings in seconds.</p>
+    </div>
+    <div class="alfai-tool" onclick="openAlfaiTool('contract')">
+      <div class="text-4xl text-pink-400 mb-4"><i class="fas fa-file-contract"></i></div>
+      <h3 class="text-xl font-bold mb-2">Contract Review</h3>
+      <p class="text-slate-400 text-sm">AI-powered clause analysis, risk detection, and redlining.</p>
+    </div>
+    <div class="alfai-tool" onclick="openAlfaiTool('research')">
+      <div class="text-4xl text-cyan-400 mb-4"><i class="fas fa-magnifying-glass"></i></div>
+      <h3 class="text-xl font-bold mb-2">Case Research</h3>
+      <p class="text-slate-400 text-sm">Search 100M+ cases, statutes, and regulations instantly.</p>
+    </div>
+    <div class="alfai-tool" onclick="openAlfaiTool('predict')">
+      <div class="text-4xl text-emerald-400 mb-4"><i class="fas fa-chart-line"></i></div>
+      <h3 class="text-xl font-bold mb-2">Outcome Prediction</h3>
+      <p class="text-slate-400 text-sm">ML models predict case outcomes with 87% accuracy.</p>
+    </div>
+    <div class="alfai-tool" onclick="openAlfaiTool('summarize')">
+      <div class="text-4xl text-amber-400 mb-4"><i class="fas fa-compress-alt"></i></div>
+      <h3 class="text-xl font-bold mb-2">Document Summarization</h3>
+      <p class="text-slate-400 text-sm">Condense 500-page depositions into key insights.</p>
+    </div>
+    <div class="alfai-tool" onclick="openAlfaiTool('translate')">
+      <div class="text-4xl text-blue-400 mb-4"><i class="fas fa-language"></i></div>
+      <h3 class="text-xl font-bold mb-2">Legal Translation</h3>
+      <p class="text-slate-400 text-sm">40+ languages with legal terminology accuracy.</p>
+    </div>
+  </div>
+
+  <!-- Alfai Workspace -->
+  <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 mb-8">
+    <h3 class="text-2xl font-bold mb-4"><i class="fas fa-terminal text-purple-400"></i> Alfai Workspace</h3>
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="text-sm text-slate-400 mb-2 block">Document Type</label>
+        <select id="alfai-doc-type" class="input">
+          <option>Motion for Continuance</option>
+          <option>Motion to Dismiss</option>
+          <option>Discovery Request</option>
+          <option>Settlement Agreement</option>
+          <option>Non-Disclosure Agreement</option>
+          <option>Employment Contract</option>
+          <option>Power of Attorney</option>
+          <option>Will / Testament</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-sm text-slate-400 mb-2 block">Jurisdiction</label>
+        <select class="input">
+          <option>Federal</option>
+          <option>California</option>
+          <option>New York</option>
+          <option>Texas</option>
+          <option>Florida</option>
+          <option>Illinois</option>
+        </select>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="text-sm text-slate-400 mb-2 block">Case Details / Instructions</label>
+      <textarea id="alfai-prompt" class="input" rows="5" placeholder="Describe your case, parties involved, key facts, and what you need drafted..."></textarea>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="runAlfai()" class="btn btn-alfai flex-1 py-4 text-lg"><i class="fas fa-wand-magic-sparkles"></i> Generate with Alfai</button>
+      <button onclick="document.getElementById('alfai-prompt').value=''" class="btn btn-secondary"><i class="fas fa-eraser"></i> Clear</button>
+    </div>
+  </div>
+
+  <!-- Alfai Output -->
+  <div id="alfai-output" class="bg-slate-900 border border-slate-700 rounded-2xl p-6 hidden">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold"><i class="fas fa-file-lines text-purple-400"></i> Generated Document</h3>
+      <div class="flex gap-2">
+        <button onclick="copyAlfaiOutput()" class="btn btn-secondary text-sm"><i class="fas fa-copy"></i> Copy</button>
+        <button onclick="downloadAlfaiOutput()" class="btn btn-primary text-sm"><i class="fas fa-download"></i> Download</button>
+      </div>
+    </div>
+    <div id="alfai-content" class="bg-slate-950 rounded-lg p-6 font-mono text-sm text-slate-300 whitespace-pre-wrap leading-relaxed"></div>
+  </div>
+</div>
+
+<!-- MOCK TRIAL VIEW -->
+<div id="view-mocktrial" class="view p-8 max-w-6xl mx-auto">
+  <div class="text-center mb-10">
+    <div class="inline-block px-4 py-1 rounded-full bg-pink-500/20 text-pink-400 text-sm font-semibold mb-4">
+      <i class="fas fa-scale-balanced"></i> Practice Courtroom
+    </div>
+    <h1 class="text-5xl font-bold mb-4" style="background:linear-gradient(135deg,#ec4899,#f59e0b);-webkit-background-clip:text;color:transparent">Mock Trial Simulator</h1>
+    <p class="text-xl text-slate-400 max-w-2xl mx-auto">Practice your courtroom arguments against AI judges, opposing counsel, and juries. Get real-time feedback on your performance.</p>
+  </div>
+
+  <!-- Scenario Selection -->
+  <h2 class="text-2xl font-bold mb-6">Select a Scenario</h2>
+  <div class="grid grid-cols-2 gap-6 mb-10">
+    <div class="mock-scenario" onclick="startMockTrial('criminal')">
+      <div class="flex items-start gap-4">
+        <div class="w-14 h-14 rounded-xl bg-red-500/20 flex items-center justify-center text-2xl text-red-400"><i class="fas fa-gavel"></i></div>
+        <div class="flex-1">
+          <h3 class="text-xl font-bold mb-1">Criminal Defense</h3>
+          <p class="text-sm text-slate-400 mb-2">Defend a client charged with burglary. Challenge the evidence and cross-examine witnesses.</p>
+          <div class="flex gap-2">
+            <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">Advanced</span>
+            <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">45 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-scenario" onclick="startMockTrial('civil')">
+      <div class="flex items-start gap-4">
+        <div class="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center text-2xl text-blue-400"><i class="fas fa-handshake"></i></div>
+        <div class="flex-1">
+          <h3 class="text-xl font-bold mb-1">Civil Litigation</h3>
+          <p class="text-sm text-slate-400 mb-2">Plaintiff in a breach of contract case. Present damages and prove liability.</p>
+          <div class="flex gap-2">
+            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">Intermediate</span>
+            <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">30 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-scenario" onclick="startMockTrial('family')">
+      <div class="flex items-start gap-4">
+        <div class="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl text-purple-400"><i class="fas fa-people-arrows"></i></div>
+        <div class="flex-1">
+          <h3 class="text-xl font-bold mb-1">Family Law</h3>
+          <p class="text-sm text-slate-400 mb-2">Custody dispute. Present the best interest of the child argument.</p>
+          <div class="flex gap-2">
+            <span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Beginner</span>
+            <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">25 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-scenario" onclick="startMockTrial('appeal')">
+      <div class="flex items-start gap-4">
+        <div class="w-14 h-14 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl text-amber-400"><i class="fas fa-scroll"></i></div>
+        <div class="flex-1">
+          <h3 class="text-xl font-bold mb-1">Appellate Argument</h3>
+          <p class="text-sm text-slate-400 mb-2">Oral argument before appellate court. Focus on legal errors and precedent.</p>
+          <div class="flex gap-2">
+            <span class="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded">Expert</span>
+            <span class="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded">60 min</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Mock Trial -->
+  <div id="mock-trial-active" class="bg-slate-900 border border-slate-700 rounded-2xl p-6 hidden">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-bold"><i class="fas fa-gavel text-pink-400"></i> <span id="mock-title">Active Mock Trial</span></h3>
+      <button onclick="endMockTrial()" class="btn btn-danger"><i class="fas fa-stop"></i> End Session</button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-slate-950 rounded-lg p-4">
+        <div class="text-xs text-slate-400 mb-1">AI Judge</div>
+        <div class="font-semibold">Hon. AI Martinez</div>
+        <div class="text-xs text-emerald-400 mt-1">● Listening</div>
+      </div>
+      <div class="bg-slate-950 rounded-lg p-4">
+        <div class="text-xs text-slate-400 mb-1">Opposing Counsel</div>
+        <div class="font-semibold">AI Prosecutor Chen</div>
+        <div class="text-xs text-emerald-400 mt-1">● Ready</div>
+      </div>
+      <div class="bg-slate-950 rounded-lg p-4">
+        <div class="text-xs text-slate-400 mb-1">Timer</div>
+        <div class="font-semibold text-2xl" id="mock-timer">00:00</div>
+        <div class="text-xs text-slate-400 mt-1">Elapsed</div>
+      </div>
+    </div>
+
+    <div class="bg-slate-950 rounded-lg p-4 mb-4">
+      <div class="text-xs text-slate-400 mb-2">AI Judge Prompt</div>
+      <div id="mock-judge-prompt" class="text-slate-200">Counsel, please present your opening statement. The court is ready to hear your argument.</div>
+    </div>
+
+    <textarea id="mock-argument" class="input mb-4" rows="4" placeholder="Type your argument or statement here..."></textarea>
+    <div class="flex gap-3">
+      <button onclick="submitMockArgument()" class="btn btn-primary flex-1"><i class="fas fa-paper-plane"></i> Submit Argument</button>
+      <button onclick="getMockFeedback()" class="btn btn-alfai"><i class="fas fa-lightbulb"></i> Get Feedback</button>
+    </div>
+
+    <div id="mock-feedback" class="mt-6 bg-slate-950 rounded-lg p-4 hidden">
+      <h4 class="font-bold mb-2 text-purple-400"><i class="fas fa-chart-bar"></i> Performance Analysis</h4>
+      <div id="mock-feedback-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LAWYERS DIRECTORY VIEW -->
+<div id="view-directory" class="view p-8 max-w-6xl mx-auto">
+  <div class="text-center mb-10">
+    <div class="inline-block px-4 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-sm font-semibold mb-4">
+      <i class="fas fa-users"></i> Verified Attorneys Network
+    </div>
+    <h1 class="text-5xl font-bold mb-4" style="background:linear-gradient(135deg,#06b6d4,#3b82f6);-webkit-background-clip:text;color:transparent">Lawyers Directory</h1>
+    <p class="text-xl text-slate-400 max-w-2xl mx-auto">Connect with verified, reviewed attorneys across all practice areas.</p>
+  </div>
+
+  <!-- Search & Filter -->
+  <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 mb-8">
+    <div class="grid grid-cols-3 gap-4">
+      <div>
+        <label class="text-sm text-slate-400 mb-2 block">Search</label>
+        <input id="lawyer-search" type="text" placeholder="Name, firm, or keyword..." class="input" oninput="filterLawyers()">
+      </div>
+      <div>
+        <label class="text-sm text-slate-400 mb-2 block">Practice Area</label>
+        <select id="lawyer-practice" class="input" onchange="filterLawyers()">
+          <option value="">All Areas</option>
+          <option>Criminal Defense</option>
+          <option>Civil Litigation</option>
+          <option>Family Law</option>
+          <option>Corporate Law</option>
+          <option>Immigration</option>
+          <option>Personal Injury</option>
+          <option>Real Estate</option>
+          <option>Employment</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-sm text-slate-400 mb-2 block">Location</label>
+        <select id="lawyer-location" class="input" onchange="filterLawyers()">
+          <option value="">All Locations</option>
+          <option>New York, NY</option>
+          <option>Los Angeles, CA</option>
+          <option>Chicago, IL</option>
+          <option>Houston, TX</option>
+          <option>Miami, FL</option>
+          <option>San Francisco, CA</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Count -->
+  <div class="flex justify-between items-center mb-4">
+    <div class="text-slate-400"><span id="lawyer-count">0</span> attorneys found</div>
+    <div class="text-sm text-slate-400">Sort by: <select class="bg-transparent text-slate-300"><option>Rating</option><option>Experience</option><option>Name</option></select></div>
+  </div>
+
+  <!-- Lawyers Grid -->
+  <div id="lawyers-grid" class="grid grid-cols-3 gap-6"></div>
+</div>
+
+<!-- LEGALSHIELD MODAL -->
+<div id="legalshield-modal" class="modal">
+  <div class="modal-content p-8">
+    <div class="text-center mb-6">
+      <img src="https://image.qwenlm.ai/public_source/596baf5e-565b-4942-b65f-bd224fbf6eb9/16f21b132-c160-48ef-acca-a334e5d3f1b1.png" alt="LegalShield" style="width:160px;height:160px;border-radius:20px;object-fit:cover">
+    </div>
+    <h2 class="text-3xl font-bold mb-6 flex items-center gap-3 justify-center"><i class="fas fa-shield-halved text-emerald-400"></i> LegalShield® Partnership</h2>
+    <p class="text-lg mb-8 text-center">Sign up for LegalShield and receive <strong class="text-emerald-400">FREE access</strong> to the full VideoCourts platform.</p>
+    <a href="https://share.google/3tcYdLuVXu27LAVIH" target="_blank" class="block text-center btn btn-legalshield text-xl py-6">Join LegalShield → Get Free VideoCourts Access</a>
+    <button onclick="closeLegalShield()" class="mt-6 w-full py-4 text-slate-400">Close</button>
+  </div>
+</div>
+
+<!-- Grok AI Floating Chat -->
+<div onclick="openChat()" class="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-3xl shadow-2xl cursor-pointer z-50 hover:scale-110 transition">
+  <i class="fas fa-robot"></i>
+</div>
+
+<div id="chat-panel" class="fixed bottom-24 right-6 w-96 bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl flex-col z-50" style="height:520px">
+  <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+    <h3 class="font-semibold flex items-center gap-2"><i class="fas fa-robot text-cyan-400"></i> Grok AI Assistant</h3>
+    <button onclick="closeChat()" class="text-2xl hover:text-red-400">×</button>
+  </div>
+  <div id="chat-body" class="flex-1 p-4 overflow-y-auto">
+    <div class="chat-bubble bot">Hello! I'm Grok, your AI legal assistant. I can help with cases, hearings, bail, Alfai tools, mock trials, or finding lawyers. What would you like to explore?</div>
+  </div>
+  <div class="p-4 border-t border-slate-700 flex gap-2">
+    <input id="chat-input" type="text" placeholder="Ask about cases, lawyers, or tools..." class="flex-1 bg-slate-800 rounded-2xl px-4 py-3" onkeypress="if(event.key==='Enter')sendGrokMessage()">
+    <button onclick="sendGrokMessage()" class="bg-blue-600 hover:bg-blue-700 px-6 rounded-2xl"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+<script>
+  let player;
+  let mockTimerInterval = null;
+  let mockSeconds = 0;
+  let currentMockScenario = null;
+
+  const lawyers = [
+    {name:'Sarah Mitchell', firm:'Mitchell & Associates', practice:'Criminal Defense', location:'New York, NY', rating:4.9, cases:342, experience:15, avatar:'SM', verified:true},
+    {name:'James Rodriguez', firm:'Rodriguez Law Group', practice:'Civil Litigation', location:'Los Angeles, CA', rating:4.8, cases:289, experience:12, avatar:'JR', verified:true},
+    {name:'Emily Chen', firm:'Chen Family Law', practice:'Family Law', location:'San Francisco, CA', rating:4.9, cases:456, experience:18, avatar:'EC', verified:true},
+    {name:'Michael Thompson', firm:'Thompson Corporate', practice:'Corporate Law', location:'Chicago, IL', rating:4.7, cases:198, experience:20, avatar:'MT', verified:true},
+    {name:'David Patel', firm:'Patel Immigration', practice:'Immigration', location:'Houston, TX', rating:4.8, cases:521, experience:14, avatar:'DP', verified:true},
+    {name:'Lisa Anderson', firm:'Anderson Injury Law', practice:'Personal Injury', location:'Miami, FL', rating:4.6, cases:267, experience:10, avatar:'LA', verified:true},
+    {name:'Robert Kim', firm:'Kim & Partners', practice:'Real Estate', location:'New York, NY', rating:4.7, cases:178, experience:16, avatar:'RK', verified:true},
+    {name:'Jennifer Williams', firm:'Williams Employment', practice:'Employment', location:'Los Angeles, CA', rating:4.8, cases:234, experience:11, avatar:'JW', verified:true},
+    {name:'Carlos Mendez', firm:'Mendez Defense', practice:'Criminal Defense', location:'Houston, TX', rating:4.9, cases:412, experience:22, avatar:'CM', verified:true}
+  ];
+
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + id).classList.add('active');
+    window.scrollTo(0, 0);
+    if (id === 'directory') renderLawyers();
+  }
+
+  function searchCase() {
+    const input = document.getElementById('case-input').value.trim() || "CR-2025-00421";
+    const cases = {
+      'CR-2025-00421': {title:'State v. Johnson', type:'Criminal', status:'Pending', date:'July 25, 2025', judge:'Judge Martinez'},
+      'CV-2025-00892': {title:'Smith v. Acme Corp', type:'Civil', status:'Scheduled', date:'July 28, 2025', judge:'Judge Williams'},
+      'FM-2025-00156': {title:'Doe v. Doe', type:'Family', status:'In Review', date:'August 1, 2025', judge:'Judge Thompson'}
+    };
+    const c = cases[input] || {title:'Case Record', type:'General', status:'Pending', date:'TBD', judge:'TBD'};
+    const color = c.status === 'Pending' ? 'emerald' : c.status === 'Scheduled' ? 'blue' : 'amber';
+    document.getElementById('case-result').innerHTML = `
+      <div class="bg-${color}-900/30 border border-${color}-500 rounded-2xl p-6">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-2xl font-bold">Case Found: ${input}</h3>
+            <p class="text-slate-300">${c.title} • ${c.type}</p>
+          </div>
+          <span class="bg-${color}-500/20 text-${color}-400 px-3 py-1 rounded-full text-sm">${c.status}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="bg-slate-900/50 rounded-lg p-3"><div class="text-xs text-slate-400">Next Hearing</div><div class="font-semibold">${c.date}</div></div>
+          <div class="bg-slate-900/50 rounded-lg p-3"><div class="text-xs text-slate-400">Presiding Judge</div><div class="font-semibold">${c.judge}</div></div>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="showView('courtroom')" class="btn btn-primary flex-1"><i class="fas fa-video"></i> Join Virtual Hearing</button>
+          <button onclick="openChat()" class="btn btn-secondary flex-1"><i class="fas fa-robot"></i> Ask Grok AI</button>
+        </div>
+      </div>`;
+  }
+
+  function openLegalShield() { document.getElementById('legalshield-modal').classList.add('show'); }
+  function closeLegalShield() { document.getElementById('legalshield-modal').classList.remove('show'); }
+  function openChat() { document.getElementById('chat-panel').classList.add('open'); }
+  function closeChat() { document.getElementById('chat-panel').classList.remove('open'); }
+
+  function sendGrokMessage() {
+    const input = document.getElementById('chat-input');
+    const body = document.getElementById('chat-body');
+    if (!input.value.trim()) return;
+    const userMsg = input.value;
+    body.innerHTML += `<div class="chat-bubble user">${userMsg}</div>`;
+    input.value = '';
+    body.scrollTop = body.scrollHeight;
+    const lower = userMsg.toLowerCase();
+    let response;
+    if (lower.includes('alfai') || lower.includes('draft') || lower.includes('contract')) {
+      response = `Alfai is our advanced AI legal suite. You can draft motions, review contracts, research cases, predict outcomes, and more. Head to the Alfai section to get started!`;
+    } else if (lower.includes('mock') || lower.includes('trial') || lower.includes('practice')) {
+      response = `Our Mock Trial Simulator lets you practice courtroom arguments against AI judges and opposing counsel. Choose from criminal, civil, family, or appellate scenarios.`;
+    } else if (lower.includes('lawyer') || lower.includes('attorney') || lower.includes('find')) {
+      response = `Our Lawyers Directory has 2,300+ verified attorneys. You can search by practice area, location, and rating. Visit the Lawyers section to browse.`;
+    } else if (lower.includes('case') || lower.includes('cr-') || lower.includes('cv-')) {
+      response = `For case "${userMsg.substring(0,30)}...", I recommend reviewing the file and preparing a Motion for Continuance if needed. Shall I draft it with Alfai?`;
+    } else if (lower.includes('bail')) {
+      response = `For bail bonding: submit your case details in the Bail section. Our licensed partners process requests 24/7 with an average 15-minute turnaround and 10% fee.`;
+    } else {
+      response = `I can help with cases, hearings, bail, Alfai tools, mock trials, or finding lawyers. What would you like to explore?`;
+    }
+    setTimeout(() => {
+      body.innerHTML += `<div class="chat-bubble bot">${response}</div>`;
+      body.scrollTop = body.scrollHeight;
+    }, 700);
+  }
+
+  // ALFAI
+  function openAlfaiTool(tool) {
+    const prompts = {
+      'draft': 'Motion for Continuance',
+      'contract': 'Employment Agreement Review',
+      'research': 'Search for similar cases',
+      'predict': 'Analyze case outcome probability',
+      'summarize': 'Summarize deposition transcript',
+      'translate': 'Translate legal document to Spanish'
+    };
+    document.getElementById('alfai-prompt').value = prompts[tool] || '';
+    document.getElementById('alfai-prompt').focus();
+  }
+
+  function runAlfai() {
+    const prompt = document.getElementById('alfai-prompt').value;
+    const docType = document.getElementById('alfai-doc-type').value;
+    if (!prompt.trim()) {
+      alert('Please enter case details or instructions.');
+      return;
+    }
+    const output = document.getElementById('alfai-output');
+    const content = document.getElementById('alfai-content');
+    output.classList.remove('hidden');
+    content.innerHTML = '<i class="fas fa-spinner fa-spin text-purple-400"></i> Alfai is generating your document...';
+    output.scrollIntoView({behavior:'smooth'});
+
+    setTimeout(() => {
+      const generated = `IN THE UNITED STATES DISTRICT COURT
+SOUTHERN DISTRICT OF NEW YORK
+________________________________________
+
+${docType.toUpperCase()}
+
+Case No.: CR-2025-00421
+________________________________________
+
+COMES NOW the Defendant, by and through undersigned counsel, and respectfully moves this Court for an Order granting a continuance of the scheduled hearing date. In support thereof, Defendant states as follows:
+
+1. This matter is currently scheduled for hearing on July 25, 2025.
+
+2. Defendant requires additional time to complete discovery and review newly produced documents totaling approximately 15,000 pages.
+
+3. Good cause exists for this continuance as the interests of justice require adequate preparation time.
+
+4. This motion is made in good faith and not for purposes of delay.
+
+WHEREFORE, Defendant respectfully requests that this Court grant a continuance of thirty (30) days and grant such other relief as the Court deems just and proper.
+
+Respectfully submitted,
+[ATTORNEY NAME]
+[BAR NUMBER]
+[FIRM NAME]
+[CONTACT INFORMATION]
+
+---
+Generated by Alfai AI • ${new Date().toLocaleDateString()}
+Confidence Score: 94% • Citations Verified: 12`;
+      content.textContent = generated;
+    }, 1500);
+  }
+
+  function copyAlfaiOutput() {
+    const text = document.getElementById('alfai-content').textContent;
+    navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+  }
+
+  function downloadAlfaiOutput() {
+    const text = document.getElementById('alfai-content').textContent;
+    const blob = new Blob([text], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'alfai-generated-document.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // MOCK TRIAL
+  function startMockTrial(scenario) {
+    currentMockScenario = scenario;
+    const titles = {criminal:'Criminal Defense — State v. Johnson', civil:'Civil Litigation — Smith v. Acme Corp', family:'Family Law — Doe v. Doe Custody', appeal:'Appellate Argument — Case #2024-1847'};
+    document.getElementById('mock-title').textContent = titles[scenario];
+    document.getElementById('mock-trial-active').classList.remove('hidden');
+    document.getElementById('mock-feedback').classList.add('hidden');
+    document.getElementById('mock-argument').value = '';
+    mockSeconds = 0;
+    updateMockTimer();
+    clearInterval(mockTimerInterval);
+    mockTimerInterval = setInterval(() => { mockSeconds++; updateMockTimer(); }, 1000);
+    document.getElementById('mock-trial-active').scrollIntoView({behavior:'smooth'});
+  }
+
+  function updateMockTimer() {
+    const m = Math.floor(mockSeconds / 60).toString().padStart(2,'0');
+    const s = (mockSeconds % 60).toString().padStart(2,'0');
+    document.getElementById('mock-timer').textContent = `${m}:${s}`;
+  }
+
+  function endMockTrial() {
+    clearInterval(mockTimerInterval);
+    if (confirm('End this mock trial session?')) {
+      document.getElementById('mock-trial-active').classList.add('hidden');
+    }
+  }
+
+  function submitMockArgument() {
+    const arg = document.getElementById('mock-argument').value;
+    if (!arg.trim()) { alert('Please enter your argument.'); return; }
+    const prompts = {
+      criminal: 'Counsel, your argument raises interesting points. However, the prosecution notes that the defendant was identified by two witnesses. How do you address the credibility of eyewitness testimony in this case?',
+      civil: 'Thank you, Counsel. The defense argues the contract contained a force majeure clause. How do you respond to this affirmative defense?',
+      family: 'The court appreciates your presentation. The opposing party claims superior financial stability. How does this serve the best interest of the child?',
+      appeal: 'Counsel, your argument relies heavily on Smith v. Jones (2019). However, the appellee distinguishes that case on its facts. Please explain why precedent applies here.'
+    };
+    document.getElementById('mock-judge-prompt').textContent = prompts[currentMockScenario];
+    document.getElementById('mock-argument').value = '';
+  }
+
+  function getMockFeedback() {
+    const feedback = document.getElementById('mock-feedback');
+    const content = document.getElementById('mock-feedback-content');
+    feedback.classList.remove('hidden');
+    const scores = {
+      argument: Math.floor(Math.random()*20)+75,
+      evidence: Math.floor(Math.random()*20)+70,
+      procedure: Math.floor(Math.random()*20)+72,
+      persuasion: Math.floor(Math.random()*20)+68
+    };
+    content.innerHTML = `
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        <div><div class="text-xs text-slate-400 mb-1">Argument Strength</div><div class="h-2 bg-slate-800 rounded"><div class="h-2 bg-purple-500 rounded" style="width:${scores.argument}%"></div></div><div class="text-sm mt-1">${scores.argument}%</div></div>
+        <div><div class="text-xs text-slate-400 mb-1">Evidence Usage</div><div class="h-2 bg-slate-800 rounded"><div class="h-2 bg-blue-500 rounded" style="width:${scores.evidence}%"></div></div><div class="text-sm mt-1">${scores.evidence}%</div></div>
+        <div><div class="text-xs text-slate-400 mb-1">Procedural Accuracy</div><div class="h-2 bg-slate-800 rounded"><div class="h-2 bg-cyan-500 rounded" style="width:${scores.procedure}%"></div></div><div class="text-sm mt-1">${scores.procedure}%</div></div>
+        <div><div class="text-xs text-slate-400 mb-1">Persuasiveness</div><div class="h-2 bg-slate-800 rounded"><div class="h-2 bg-pink-500 rounded" style="width:${scores.persuasion}%"></div></div><div class="text-sm mt-1">${scores.persuasion}%</div></div>
+      </div>
+      <div class="text-sm text-slate-300">
+        <strong class="text-purple-400">AI Judge Notes:</strong> Strong opening with clear structure. Consider citing more recent precedent (post-2020). Your cross-examination technique needs refinement — avoid leading questions on direct. Overall performance: ${Math.round((scores.argument+scores.evidence+scores.procedure+scores.persuasion)/4)}%. Keep practicing!
+      </div>`;
+  }
+
+  // LAWYERS DIRECTORY
+  function renderStars(rating) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      html += i <= Math.round(rating) ? '<i class="fas fa-star rating-star"></i>' : '<i class="far fa-star rating-star-empty"></i>';
+    }
+    return html;
+  }
+
+  function renderLawyers() {
+    const search = document.getElementById('lawyer-search').value.toLowerCase();
+    const practice = document.getElementById('lawyer-practice').value;
+    const location = document.getElementById('lawyer-location').value;
+    const filtered = lawyers.filter(l => {
+      const matchSearch = !search || l.name.toLowerCase().includes(search) || l.firm.toLowerCase().includes(search) || l.practice.toLowerCase().includes(search);
+      const matchPractice = !practice || l.practice === practice;
+      const matchLocation = !location || l.location === location;
+      return matchSearch && matchPractice && matchLocation;
+    });
+    document.getElementById('lawyer-count').textContent = filtered.length;
+    const grid = document.getElementById('lawyers-grid');
+    grid.innerHTML = filtered.map(l => `
+      <div class="lawyer-card">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="w-14 h-14 rounded-full grad-bg flex items-center justify-center text-xl font-bold">${l.avatar}</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-lg">${l.name}</h3>
+              ${l.verified ? '<i class="fas fa-check-circle text-blue-400" title="Verified"></i>' : ''}
+            </div>
+            <div class="text-sm text-slate-400">${l.firm}</div>
+            <div class="flex items-center gap-1 mt-1">${renderStars(l.rating)} <span class="text-xs text-slate-400 ml-1">${l.rating}</span></div>
+          </div>
+        </div>
+        <div class="space-y-2 mb-4 text-sm">
+          <div class="flex justify-between"><span class="text-slate-400">Practice Area</span><span>${l.practice}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Location</span><span><i class="fas fa-location-dot"></i> ${l.location}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Experience</span><span>${l.experience} years</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Cases Won</span><span class="text-emerald-400">${l.cases}</span></div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="alert('Consultation request sent to ${l.name}!')" class="btn btn-primary flex-1 text-sm"><i class="fas fa-calendar"></i> Consult</button>
+          <button onclick="alert('Message sent to ${l.name}!')" class="btn btn-secondary text-sm"><i class="fas fa-envelope"></i></button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterLawyers() { renderLawyers(); }
+
+  // Initialize
+  window.addEventListener('load', () => {
+    try { player = videojs('courtroom-player', { controls: true, autoplay: false, preload: 'auto', fluid: true }); } catch(e) { console.log('Video player init:', e); }
+    showView('home');
+  });
+</script>
+</body>
+</html>
